@@ -11,14 +11,16 @@ let db = []
 let id = 1
 
 app.post("/api/shorturl", async (request, response) => {
+  const { url } = request.body
+
   try {
-    const domain = new URL(request.body.url).hostname
+    const domain = new URL(url).hostname
 
     dns.lookup(domain, async (err) => {
-      if (err) return response.status(400).json({ error: "invalid url" })
+      if (err) return response.json({ error: "invalid url" })
 
       const data = {
-        original_url: request.body.url,
+        original_url: url,
         short_url: id++
       }
 
@@ -27,7 +29,7 @@ app.post("/api/shorturl", async (request, response) => {
       return response.json(data)
     })
   } catch (error) {
-    return response.status(400).json({ error: "invalid url" })
+    return response.json({ error: "invalid url" })
   }
 })
 
@@ -36,7 +38,7 @@ app.get("/api/shorturl/:shortUrl", async (request, response) => {
 
   const url = db.find(item => item.short_url === Number(shortUrl))
 
-  if (!url) return response.status(400).json({ error: "No short URL found for the given input" })
+  if (!url) return response.json({ error: "No short URL found for the given input" })
 
   return response.redirect(url.original_url)
 })
