@@ -11,16 +11,14 @@ let db = []
 let id = 1
 
 app.post("/api/shorturl", async (request, response) => {
-  const { url } = request.body
-
   try {
-    const domain = new URL(url).hostname
+    const domain = new URL(request.body.url).hostname
 
     dns.lookup(domain, async (err) => {
       if (err) return response.status(400).json({ error: "invalid url" })
 
       const data = {
-        original_url: url,
+        original_url: request.body.url,
         short_url: id++
       }
 
