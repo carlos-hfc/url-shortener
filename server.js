@@ -12,6 +12,10 @@ app.use(express.urlencoded({ extended: false }))
 let db = []
 let id = 1
 
+app.get("/", async (_, response) => {
+  response.sendFile(`${process.cwd()}/views/index.html`)
+})
+
 app.post("/api/shorturl", async (request, response) => {
   console.log(request.body)
   const url = request.body.url
@@ -19,7 +23,7 @@ app.post("/api/shorturl", async (request, response) => {
   if (!url) {
     return response.json({ error: "invalid url" })
   }
-  
+
   const domain = urlParser.parse(url)
 
   dns.lookup(domain.hostname, async (err) => {
