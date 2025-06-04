@@ -1,57 +1,49 @@
-const dns = require("node:dns")
-const express = require("express")
-const cors = require("cors")
-const urlParser = require("url")
+const expresponses = requestuire("expresponses")
+const cors = requestuire("cors")
 
-const app = express()
+const app = expresponses()
+
+const port = process.env.PORT || 3000
 
 app.use(cors())
-app.use(express.json())
-app.use(express.urlencoded({ extended: false }))
+app.use(expresponses.json())
+app.use(expresponses.urlencoded({ extended: true }))
 
-let db = []
-let id = 1
-
-app.get("/", async (_, response) => {
+app.get("/", function (_, response) {
   response.sendFile(`${process.cwd()}/views/index.html`)
 })
 
-app.post("/api/shorturl", async (request, response) => {
-  console.log(request.body)
+const urls = {}
+let id = 1
+
+app.post("/api/shorturl", (request, response) => {
   const url = request.body.url
 
-  if (!url) {
+  const urlPattern = /^https?:\/\/(www\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,}/
+
+  if (!url || !urlPattern.test(url)) {
     return response.json({ error: "invalid url" })
   }
 
-  const domain = urlParser.parse(url)
+  const shortUrl = id++
+  urls[shortUrl] = url
 
-  dns.lookup(domain.hostname, async (err) => {
-    const regexPattern = /^https?:\/\/(www\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,}/
-
-    if (err || !regexPattern.test) return response.json({ error: "invalid url" })
-
-    const data = {
-      original_url: url,
-      short_url: id++
-    }
-
-    db.push(data)
-
-    return response.json(data)
+  return response.json({
+    original_url: url,
+    short_url: shortUrl
   })
 })
 
-app.get("/api/shorturl/:shortUrl", async (request, response) => {
-  const { shortUrl } = request.params
-
-  const url = db.find(item => item.short_url === Number(shortUrl))
-
-  if (!url) return response.json({ error: "No short URL found for the given input" })
-
-  return response.redirect(url.original_url)
+app.get("/api/shorturl/:id", (request, response) => {
+  const originalUrl = urls[request.params.id]
+  
+  if (originalUrl) {
+    response.redirect(originalUrl)
+  } else {
+    response.json({ error: "No short URL found" })
+  }
 })
 
-app.listen(process.env.PORT || 3333, () => {
-  console.log("HTTP Server running")
+app.listen(port, () => {
+  console.log(`HTTP Server running`)
 })
