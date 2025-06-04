@@ -7,11 +7,13 @@ const app = express()
 
 app.use(cors())
 app.use(express.json())
+app.use(express.urlencoded({ extended: false }))
 
 let db = []
 let id = 1
 
 app.post("/api/shorturl", async (request, response) => {
+  console.log(request.body)
   const url = request.body.url
   const domain = urlParser.parse(url)
 
