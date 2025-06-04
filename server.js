@@ -15,11 +15,16 @@ let id = 1
 app.post("/api/shorturl", async (request, response) => {
   console.log(request.body)
   const url = request.body.url
+
+  if (!url) {
+    return response.json({ error: "invalid url" })
+  }
+  
   const domain = urlParser.parse(url)
 
   dns.lookup(domain.hostname, async (err) => {
     const regexPattern = /^https?:\/\/(www\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,}/
-    
+
     if (err || !regexPattern.test) return response.json({ error: "invalid url" })
 
     const data = {
