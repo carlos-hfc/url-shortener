@@ -1,44 +1,41 @@
-const expresponses = requestuire("expresponses")
-const cors = requestuire("cors")
+const express = require("express")
+const cors = require("cors")
 
-const app = expresponses()
+const app = express()
 
-const port = process.env.PORT || 3000
+const port = process.env.PORT || 3333
 
 app.use(cors())
-app.use(expresponses.json())
-app.use(expresponses.urlencoded({ extended: true }))
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
 
-app.get("/", function (_, response) {
-  response.sendFile(`${process.cwd()}/views/index.html`)
-})
-
-const urls = {}
+const db = []
 let id = 1
 
 app.post("/api/shorturl", (request, response) => {
   const url = request.body.url
 
-  const urlPattern = /^https?:\/\/(www\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,}/
+  const urlPattern = /^https?:\/\/(www\.)?[a-zA-Z0-9-]/
 
   if (!url || !urlPattern.test(url)) {
     return response.json({ error: "invalid url" })
   }
 
-  const shortUrl = id++
-  urls[shortUrl] = url
-
-  return response.json({
+  const data = {
     original_url: url,
-    short_url: shortUrl
-  })
+    short_url: id++
+  }
+
+  db.push(data)
+
+  return response.json(data)
 })
 
 app.get("/api/shorturl/:id", (request, response) => {
-  const originalUrl = urls[request.params.id]
-  
-  if (originalUrl) {
-    response.redirect(originalUrl)
+  const item = db.find(item => item.short_url === Number(request.params.id))
+
+  if (item) {
+    response.redirect(item.original_url)
   } else {
     response.json({ error: "No short URL found" })
   }
