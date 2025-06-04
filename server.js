@@ -18,7 +18,9 @@ app.post("/api/shorturl", async (request, response) => {
   const domain = urlParser.parse(url)
 
   dns.lookup(domain.hostname, async (err) => {
-    if (err || !/^https?:\/\//.test) return response.json({ error: "invalid url" })
+    const regexPattern = /^https?:\/\/(www\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,}/
+    
+    if (err || !regexPattern.test) return response.json({ error: "invalid url" })
 
     const data = {
       original_url: url,
