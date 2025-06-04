@@ -1,6 +1,7 @@
 const dns = require("node:dns")
 const express = require("express")
 const cors = require("cors")
+const urlParser = require("url")
 
 const app = express()
 
@@ -11,26 +12,21 @@ let db = []
 let id = 1
 
 app.post("/api/shorturl", async (request, response) => {
-  const { url } = request.body
+  const url = request.body.url
+  const domain = urlParser.parse(url)
 
-  try {
-    const domain = new URL(url).hostname
+  dns.lookup(domain.hostname, async (err) => {
+    if (err || !/^https?:\/\//.test) return response.json({ error: "invalid url" })
 
-    dns.lookup(domain, async (err) => {
-      if (err) return response.json({ error: "invalid url" })
+    const data = {
+      original_url: url,
+      short_url: id++
+    }
 
-      const data = {
-        original_url: url,
-        short_url: id++
-      }
+    db.push(data)
 
-      db.push(data)
-
-      return response.json(data)
-    })
-  } catch (error) {
-    return response.json({ error: "invalid url" })
-  }
+    return response.json(data)
+  })
 })
 
 app.get("/api/shorturl/:shortUrl", async (request, response) => {
